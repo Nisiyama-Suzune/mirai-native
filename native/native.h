@@ -1,6 +1,6 @@
 #pragma once
 
-#define GB18030 54936
+#define GBK (936)
 #define CQAPI(ReturnType, Name, Size) __pragma(comment(linker, "/EXPORT:" #Name "=_" #Name "@" #Size))\
  extern "C" __declspec(dllexport) ReturnType __stdcall Name
 

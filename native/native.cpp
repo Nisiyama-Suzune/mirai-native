@@ -33,7 +33,7 @@ const char* JstringToGb(JNIEnv* env, jstring jstr)
 	int length = env->GetStringLength(jstr);
 	auto jcstr = env->GetStringChars(jstr, 0);
 	auto rtn = static_cast<char*>(malloc(length * 2 + 1));
-	auto size = WideCharToMultiByte(GB18030, 0, LPCWSTR(jcstr), length, rtn,
+	auto size = WideCharToMultiByte(GBK, 0, LPCWSTR(jcstr), length, rtn,
 	                                length * 2 + 1, nullptr, nullptr);
 	if (size <= 0)
 	{
@@ -66,9 +66,9 @@ jstring GbToJstring(JNIEnv* env, const char* str)
 	}
 	jstring rtn = nullptr;
 	unsigned short* buffer = 0;
-	const auto length = MultiByteToWideChar(GB18030, 0, LPCSTR(str), slen, nullptr, 0);
+	const auto length = MultiByteToWideChar(GBK, 0, LPCSTR(str), slen, nullptr, 0);
 	buffer = static_cast<unsigned short*>(malloc(length * 2 + 1));
-	if (MultiByteToWideChar(GB18030, 0, LPCSTR(str), slen, LPWSTR(buffer), length) > 0)
+	if (MultiByteToWideChar(GBK, 0, LPCSTR(str), slen, LPWSTR(buffer), length) > 0)
 	{
 		rtn = env->NewString(static_cast<jchar*>(buffer), length);
 	}
