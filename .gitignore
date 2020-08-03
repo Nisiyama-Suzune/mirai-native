@@ -11,3 +11,6 @@ out
 epl-test/*.dll
 epl-test/*.bak
 epl-test/*.ec
+/gradle/wrapper
+/gradlew
+/gradlew.bat

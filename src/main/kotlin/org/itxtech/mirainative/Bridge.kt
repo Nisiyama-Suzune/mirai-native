@@ -268,6 +268,11 @@ object Bridge {
         return MiraiBridge.getImage(pluginId, image)
     }
 
+    @JvmStatic
+    fun reload(pluginId: Int) : Int {
+        return MiraiBridge.reload(pluginId)
+    }
+
     // Placeholder methods which mirai hasn't supported yet
 
     @JvmStatic

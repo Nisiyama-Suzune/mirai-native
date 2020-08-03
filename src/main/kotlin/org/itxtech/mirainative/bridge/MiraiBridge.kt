@@ -33,9 +33,11 @@ import io.ktor.util.cio.writeChannel
 import io.ktor.util.decodeBase64Bytes
 import io.ktor.util.encodeBase64
 import io.ktor.utils.io.copyAndClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.core.*
+import kotlinx.serialization.json.Json
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
@@ -55,6 +57,8 @@ import org.itxtech.mirainative.manager.PluginManager
 import org.itxtech.mirainative.message.ChainCodeConverter
 import org.itxtech.mirainative.plugin.FloatingWindowEntry
 import org.itxtech.mirainative.plugin.NativePlugin
+import org.itxtech.mirainative.plugin.PluginInfo
+import org.itxtech.mirainative.ui.Tray
 import java.io.File
 import java.math.BigInteger
 import java.nio.charset.Charset
@@ -186,7 +190,7 @@ object MiraiBridge {
     }
 
     fun getStrangerInfo(pluginId: Int, account: Long) = call(pluginId, "") {
-        val m = CacheManager.findMember(account) ?: return ""
+        val m = CacheManager.findMember(account) ?: (MiraiNative.bot.getFriendOrNull(account) ?: return "")
         return buildPacket {
             writeLong(m.id)
             writeString(m.nick)
@@ -326,7 +330,38 @@ object MiraiBridge {
     }
 
     fun getLoginNick(pluginId: Int) = call(pluginId, "") {
-        return MiraiNative.bot.nick
+        return MiraiNative.bot.getFriendOrNull(MiraiNative.bot.id)!!.nick
+    }
+
+    fun reload(pluginId: Int) = call(pluginId, 0) {
+        if (PluginManager.plugins.containsKey(pluginId)) {
+            val pluginCopy : NativePlugin = PluginManager.plugins[pluginId]!!
+            val pluginEnabled = pluginCopy.enabled
+            MiraiNative.nativeLaunch {
+                // Disable and Unload
+                PluginManager.disablePlugin(pluginCopy)
+                NativeBridge.exitPlugin(pluginCopy)
+                if (NativeBridge.unloadPlugin(pluginCopy) == 0) {
+                    pluginCopy.loaded = false
+                    pluginCopy.enabled = false
+                    Tray.update()
+                }
+                delay(3000L)
+                // Update
+                PluginManager.updatePlugin(pluginCopy)
+
+                // Reload and Enable
+                if (pluginEnabled) {
+                    PluginManager.loadPluginAndEnable(pluginCopy.file)
+                } else {
+                    PluginManager.loadPlugin(pluginCopy.file)
+                }
+            }
+            return 1
+        } else {
+            MiraiNative.logger.error("Id " + pluginId + " 不存在。")
+            return 0
+        }
     }
 
     fun forwardMessage(pluginId: Int, type: Int, id: Long, strategy: String, msg: String) = call(pluginId, 0) {

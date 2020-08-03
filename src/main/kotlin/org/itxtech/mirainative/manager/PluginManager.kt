@@ -42,11 +42,13 @@ object PluginManager {
     private val pluginId = atomic(0)
     val plugins = hashMapOf<Int, NativePlugin>()
     private val pl: File by lazy { File(MiraiNative.dataFolder.absolutePath + File.separatorChar + "plugins").also { it.mkdirs() } }
+    private val plnew: File by lazy { File(MiraiNative.dataFolder.absolutePath + File.separatorChar + "pluginsnew").also { it.mkdirs() } }
 
     fun loadPlugins() {
         if (!MiraiNative.dataFolder.isDirectory) {
             MiraiNative.logger.error("数据文件夹不是一个文件夹！" + MiraiNative.dataFolder.absolutePath)
         } else {
+            updatePlugins()
             MiraiNative.nativeLaunch {
                 pl.listFiles()?.forEach { file ->
                     if (file.isFile && file.absolutePath.endsWith("dll") && !file.absolutePath.endsWith("CQP.dll")) {
@@ -117,6 +119,35 @@ object PluginManager {
         }
     }
 
+    fun loadPluginAndEnable(file: File) {
+        plugins.values.forEach {
+            if (it.loaded && it.file == file) {
+                MiraiNative.logger.error("DLL ${file.absolutePath} 已被加载，无法重复加载。")
+                return
+            }
+        }
+        MiraiNative.nativeLaunch {
+            val plugin = NativePlugin(file, pluginId.value)
+            val json = File(file.parent + File.separatorChar + file.name.replace(".dll", ".json"))
+            if (json.exists()) {
+                plugin.pluginInfo = Json {
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                    serializeSpecialFloatingPointValues = true
+                    useArrayPolymorphism = true
+                }.parse(PluginInfo.serializer(), json.readText())
+            }
+            if (NativeBridge.loadPlugin(plugin) == 0) {
+                plugin.loaded = true
+                plugins[pluginId.getAndIncrement()] = plugin
+                NativeBridge.updateInfo(plugin)
+                NativeBridge.startPlugin(plugin)
+                Tray.update()
+            }
+            enablePlugin(plugin)
+        }
+    }
+
     fun unloadPlugin(plugin: NativePlugin) {
         MiraiNative.nativeLaunch {
             disablePlugin(plugin)
@@ -158,6 +189,27 @@ object PluginManager {
             if (it.autoEnable) {
                 enablePlugin(it)
             }
+        }
+    }
+
+    fun updatePlugin(plugin: NativePlugin)
+    {
+        val newFile = File(plnew.path + File.separatorChar + plugin.file.name)
+        val newJson = File(plnew.path + File.separatorChar + plugin.file.name.replace(".dll", ".json"))
+        if (newFile.exists()) {
+            newFile.copyTo(plugin.file, true)
+            newFile.delete()
+        }
+        if (newJson.exists()) {
+            newJson.copyTo(File(plugin.file.parent + newJson.name), true)
+            newJson.delete()
+        }
+    }
+
+    fun updatePlugins() {
+        plnew.listFiles()?.forEach {
+            it.copyRecursively(File(pl.path + File.separatorChar + it.name), true)
+            it.deleteRecursively()
         }
     }
 

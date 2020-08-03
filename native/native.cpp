@@ -569,6 +569,15 @@ CQAPI(const char*, CQ_getImage, 8)(int32_t plugin_id, const char* image)
 	return result;
 }
 
+CQAPI(int32_t, CQ_reload, 4)(int32_t plugin_id)
+{
+	auto env = attach_java();
+	auto method = env->GetStaticMethodID(bclz, "reload", "(I)I");
+	auto result = env->CallStaticIntMethod(bclz, method, plugin_id);
+	detach_java();
+	return result;
+}
+
 CQAPI(const char*, CQ_getRecordV2, 12)(int32_t plugin_id, const char* file, const char* format)
 {
 	auto env = attach_java();
