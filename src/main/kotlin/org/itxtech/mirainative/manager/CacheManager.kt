@@ -28,6 +28,8 @@ import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.launch
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.events.BotEvent
+import net.mamoe.mirai.message.GroupMessageEvent
+import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.message.data.MessageSource
 import net.mamoe.mirai.message.data.recall
@@ -57,6 +59,14 @@ object CacheManager {
     }
 
     fun cacheTempMessage(message: TempMessageEvent, id: Int = nextId()): Int {
+        senders[message.sender.id] = message.sender
+        return cacheMessage(
+            message.message.source,
+            id
+        )
+    }
+
+    fun cacheGroupMessage(message: GroupMessageEvent, id: Int = nextId()): Int {
         senders[message.sender.id] = message.sender
         return cacheMessage(
             message.message.source,

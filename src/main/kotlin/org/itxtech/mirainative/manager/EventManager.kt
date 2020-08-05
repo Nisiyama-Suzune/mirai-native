@@ -63,11 +63,11 @@ object EventManager {
                 )
             }
         }
-        MiraiNative.subscribeAlways<GroupMessageEvent> {
+        MiraiNative.subscribeAlways<GroupMessageEvent> { msg ->
             MiraiNative.nativeLaunch {
                 NativeBridge.eventGroupMessage(
                     1,
-                    CacheManager.cacheMessage(message.source),
+                    CacheManager.cacheGroupMessage(msg),
                     group.id,
                     sender.id,
                     "",
@@ -237,6 +237,14 @@ object EventManager {
                 } else {
                     NativeBridge.eventGroupBan(Bridge.GROUP_UNMUTE, getTimestamp(), group.id, op, 0, 0)
                 }
+            }
+        }
+        MiraiNative.subscribeAlways<BotJoinGroupEvent.Invite> {
+            MiraiNative.nativeLaunch {
+                NativeBridge.eventGroupMemberJoin(
+                    Bridge.MEMBER_JOIN_INVITED_BY_ADMIN,
+                    getTimestamp(), group.id, 0, bot.id
+                )
             }
         }
     }

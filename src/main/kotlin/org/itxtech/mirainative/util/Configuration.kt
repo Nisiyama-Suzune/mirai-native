@@ -27,6 +27,7 @@ package org.itxtech.mirainative.util
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.stringify
 import org.itxtech.mirainative.MiraiNative
 import org.itxtech.mirainative.manager.PluginManager
 import org.itxtech.mirainative.ui.FloatingWindow
@@ -40,7 +41,7 @@ object ConfigMan {
             Json {
                 isLenient = true
                 ignoreUnknownKeys = true
-                serializeSpecialFloatingPointValues = true
+                serializeSpecialFloatingPointValues  = true
                 useArrayPolymorphism = true
             }.parse(Configuration.serializer(), file.readText())
         } else {

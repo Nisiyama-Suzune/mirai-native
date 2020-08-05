@@ -105,7 +105,7 @@ object PluginManager {
                 plugin.pluginInfo = Json {
                     isLenient = true
                     ignoreUnknownKeys = true
-                    serializeSpecialFloatingPointValues = true
+                    serializeSpecialFloatingPointValues  = true
                     useArrayPolymorphism = true
                 }.parse(PluginInfo.serializer(), json.readText())
             }
